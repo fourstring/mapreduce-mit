@@ -2,8 +2,12 @@ package main
 
 import (
 	"fmt"
-	"mapreduce"
+	"log"
+	"mapreduce/src/mapreduce"
 	"os"
+	"strconv"
+	"strings"
+	"unicode"
 )
 
 //
@@ -15,6 +19,28 @@ import (
 //
 func mapF(filename string, contents string) []mapreduce.KeyValue {
 	// Your code here (Part II).
+	countMap := make(map[string]int)
+	var keyBuilder strings.Builder
+	for _, c := range contents {
+		if unicode.IsLetter(c) {
+			keyBuilder.WriteRune(c)
+		} else {
+			if keyBuilder.Len() > 0 {
+				key := keyBuilder.String()
+				countMap[key] += 1
+				keyBuilder.Reset()
+			}
+		}
+	}
+	kvs := make([]mapreduce.KeyValue, len(countMap))
+	i := 0
+	for key, count := range countMap {
+		kvs[i] = mapreduce.KeyValue{
+			Key:   key,
+			Value: strconv.Itoa(count),
+		}
+	}
+	return kvs
 }
 
 //
@@ -24,6 +50,15 @@ func mapF(filename string, contents string) []mapreduce.KeyValue {
 //
 func reduceF(key string, values []string) string {
 	// Your code here (Part II).
+	sum := 0
+	for _, countStr := range values {
+		count, err := strconv.Atoi(countStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		sum += count
+	}
+	return strconv.Itoa(sum)
 }
 
 // Can be run in 3 ways:
